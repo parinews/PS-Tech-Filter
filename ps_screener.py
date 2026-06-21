@@ -25,7 +25,7 @@ def fetch_etf_tickers(symbol: str) -> list[str]:
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
     # Tickers appear as s:"$AAPL" in the embedded SvelteKit JSON payload
-    matches = re.findall(r'"s":"\$([A-Z]{1,5})"', resp.text)
+    matches = re.findall(r'\bs:"\$([A-Z]{1,5})"', resp.text)
     return list(dict.fromkeys(matches))  # deduplicate, preserve order
 
 
