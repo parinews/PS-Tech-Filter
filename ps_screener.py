@@ -1,8 +1,8 @@
 import os
+import re
 import smtplib
 import time
 import requests
-import pandas as pd
 import yfinance as yf
 from datetime import date
 from email.mime.multipart import MIMEMultipart
@@ -20,17 +20,13 @@ HEADERS = {
 
 
 def fetch_etf_tickers(symbol: str) -> list[str]:
-    """Fetch all holdings tickers for an ETF from stockanalysis.com.
-    Holdings data is sourced from SEC filings and ETF provider disclosures.
-    """
+    """Extract holdings tickers from JSON embedded in stockanalysis.com page."""
     url = f"https://stockanalysis.com/etf/{symbol.lower()}/holdings/"
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
-    tables = pd.read_html(resp.text)
-    df = tables[0]
-    col = next(c for c in df.columns if str(c).lower() in ("symbol", "ticker"))
-    tickers = df[col].dropna().astype(str).str.strip().tolist()
-    return [t for t in tickers if t and t.isalpha()]
+    # Tickers appear as s:"$AAPL" in the embedded SvelteKit JSON payload
+    matches = re.findall(r'"s":"\$([A-Z]{1,5})"', resp.text)
+    return list(dict.fromkeys(matches))  # deduplicate, preserve order
 
 
 def get_ticker_ps(ticker: str) -> tuple[str, float] | None:
@@ -132,3 +128,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
