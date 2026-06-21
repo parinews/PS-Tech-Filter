@@ -61,7 +61,7 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
             f"</tr>"
         )
     return f"""<html><body style="font-family:Arial,sans-serif;color:#222;max-width:660px;margin:32px auto;">
-<h2 style="color:#1a73e8;margin-bottom:4px;">50 Lowest P/S Ratio SaaS Stocks &mdash; {today}</h2>
+<h2 style="color:#1a73e8;margin-bottom:4px;">SaaS Stocks with P/S Between 2.0x and 4.0x &mdash; {today}</h2>
 <p style="color:#666;font-size:13px;margin-top:0;">
   Universe: Vanguard Information Technology ETF (VGT)<br>
   Sorted ascending by trailing-twelve-month Price / Sales ratio.
@@ -87,7 +87,7 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
 
 def send_email(html: str) -> None:
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Top 50 Lowest P/S SaaS Stocks — {date.today()}"
+    msg["Subject"] = f"SaaS Stocks with P/S 2.0x–4.0x — {date.today()}"
     msg["From"] = GMAIL_USER
     msg["To"] = GMAIL_USER
     msg.attach(MIMEText(html, "html"))
@@ -112,14 +112,16 @@ def main() -> None:
         if i % 25 == 0:
             print(f"  {i}/{len(universe)} processed, {len(results)} with P/S data so far")
 
-    results.sort(key=lambda x: x[2])
-    top20 = results[:TOP_N]
+    filtered = sorted(
+        [(t, n, ps) for t, n, ps in results if 2.0 <= ps <= 4.0],
+        key=lambda x: x[2]
+    )
 
-    print(f"\nTop {TOP_N} lowest P/S:")
-    for rank, (ticker, name, ps) in enumerate(top20, 1):
+    print(f"\nSaaS stocks with P/S between 2.0x and 4.0x: {len(filtered)}")
+    for rank, (ticker, name, ps) in enumerate(filtered, 1):
         print(f"  {rank:>2}. {ticker:<6} {name:<35} {ps:.2f}x")
 
-    send_email(build_html(top20))
+    send_email(build_html(filtered))
     print("\nEmail sent.")
 
 
