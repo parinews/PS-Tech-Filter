@@ -24,15 +24,8 @@ def fetch_vgt_tickers() -> list[str]:
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
     data = resp.json()
-    # The API returns a nested structure; holdings are under currentPage > holding
-    holdings = (
-        data.get("currentPage", {}).get("holding")
-        or data.get("holdings")
-        or data
-    )
-    if isinstance(holdings, dict):
-        holdings = list(holdings.values())
-    return [h["ticker"] for h in holdings if isinstance(h, dict) and h.get("ticker")]
+    holdings = data["fund"]["entity"]
+    return [h["ticker"] for h in holdings if h.get("ticker")]
 
 
 def get_ticker_ps(ticker: str) -> tuple[str, float] | None:
