@@ -28,10 +28,15 @@ def fetch_vgt_tickers() -> list[str]:
     return [h["ticker"] for h in holdings if h.get("ticker")]
 
 
+SAAS_INDUSTRIES = {"Software - Application", "Software - Infrastructure"}
+
+
 def get_ticker_ps(ticker: str) -> tuple[str, float] | None:
     for attempt in range(3):
         try:
             info = yf.Ticker(ticker).info
+            if info.get("industry") not in SAAS_INDUSTRIES:
+                return None
             ratio = info.get("priceToSalesTrailing12Months")
             if ratio and ratio > 0:
                 return (info.get("shortName", ticker), ratio)
