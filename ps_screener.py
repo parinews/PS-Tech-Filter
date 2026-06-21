@@ -1,5 +1,4 @@
 import os
-import re
 import smtplib
 import time
 import requests
@@ -19,14 +18,21 @@ HEADERS = {
 }
 
 
-def fetch_etf_tickers(symbol: str) -> list[str]:
-    """Extract holdings tickers from JSON embedded in stockanalysis.com page."""
-    url = f"https://stockanalysis.com/etf/{symbol.lower()}/holdings/"
+def fetch_vgt_tickers() -> list[str]:
+    """Fetch all VGT holdings from Vanguard's official portfolio API (~323 stocks)."""
+    url = "https://investor.vanguard.com/investment-products/etfs/profile/api/VGT/portfolio-holding/stock"
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
-    # Tickers appear as s:"$AAPL" in the embedded SvelteKit JSON payload
-    matches = re.findall(r'\bs:"\$([A-Z]{1,5})"', resp.text)
-    return list(dict.fromkeys(matches))  # deduplicate, preserve order
+    data = resp.json()
+    # The API returns a nested structure; holdings are under currentPage > holding
+    holdings = (
+        data.get("currentPage", {}).get("holding")
+        or data.get("holdings")
+        or data
+    )
+    if isinstance(holdings, dict):
+        holdings = list(holdings.values())
+    return [h["ticker"] for h in holdings if isinstance(h, dict) and h.get("ticker")]
 
 
 def get_ticker_ps(ticker: str) -> tuple[str, float] | None:
@@ -59,7 +65,7 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
     return f"""<html><body style="font-family:Arial,sans-serif;color:#222;max-width:660px;margin:32px auto;">
 <h2 style="color:#1a73e8;margin-bottom:4px;">20 Lowest P/S Ratio Stocks &mdash; {today}</h2>
 <p style="color:#666;font-size:13px;margin-top:0;">
-  Universe: NASDAQ-100 (QQQ) + Vanguard Information Technology ETF (VGT)<br>
+  Universe: Vanguard Information Technology ETF (VGT)<br>
   Sorted ascending by trailing-twelve-month Price / Sales ratio.
 </p>
 <table style="border-collapse:collapse;width:100%;font-size:14px;">
@@ -76,7 +82,7 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
   </tbody>
 </table>
 <p style="color:#bbb;font-size:11px;margin-top:18px;">
-  Data via Yahoo Finance &middot; Holdings via stockanalysis.com (sourced from SEC filings &amp; ETF providers)
+  Data via Yahoo Finance &middot; Holdings via Vanguard
 </p>
 </body></html>"""
 
@@ -93,16 +99,9 @@ def send_email(html: str) -> None:
 
 
 def main() -> None:
-    print("Fetching QQQ holdings…")
-    qqq = fetch_etf_tickers("QQQ")
-    print(f"  {len(qqq)} tickers from QQQ")
-
-    print("Fetching VGT holdings…")
-    vgt = fetch_etf_tickers("VGT")
-    print(f"  {len(vgt)} tickers from VGT")
-
-    universe = list(dict.fromkeys(qqq + vgt))
-    print(f"Combined universe: {len(universe)} unique tickers")
+    print("Fetching VGT holdings (Vanguard API)…")
+    universe = fetch_vgt_tickers()
+    print(f"  {len(universe)} tickers from VGT")
 
     results: list[tuple[str, str, float]] = []
     for i, ticker in enumerate(universe):
@@ -128,4 +127,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
