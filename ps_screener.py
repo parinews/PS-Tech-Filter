@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 
 GMAIL_USER = os.environ["GMAIL_USER"]
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
-TOP_N = 20
+TOP_N = 50
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -61,7 +61,7 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
             f"</tr>"
         )
     return f"""<html><body style="font-family:Arial,sans-serif;color:#222;max-width:660px;margin:32px auto;">
-<h2 style="color:#1a73e8;margin-bottom:4px;">20 Lowest P/S Ratio Stocks &mdash; {today}</h2>
+<h2 style="color:#1a73e8;margin-bottom:4px;">50 Lowest P/S Ratio SaaS Stocks &mdash; {today}</h2>
 <p style="color:#666;font-size:13px;margin-top:0;">
   Universe: Vanguard Information Technology ETF (VGT)<br>
   Sorted ascending by trailing-twelve-month Price / Sales ratio.
@@ -87,7 +87,7 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
 
 def send_email(html: str) -> None:
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Top 20 Lowest P/S Stocks — {date.today()}"
+    msg["Subject"] = f"Top 50 Lowest P/S SaaS Stocks — {date.today()}"
     msg["From"] = GMAIL_USER
     msg["To"] = GMAIL_USER
     msg.attach(MIMEText(html, "html"))
