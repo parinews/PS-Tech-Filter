@@ -51,38 +51,60 @@ def build_html(rows: list[tuple[str, str, float]]) -> str:
     today = date.today().strftime("%B %d, %Y")
     row_html = ""
     for rank, (ticker, name, ps) in enumerate(rows, 1):
-        bg = "#f9f9ff" if rank % 2 == 0 else "#ffffff"
+        border = "border-bottom:1px solid #ebebeb;"
         row_html += (
-            f"<tr style='background:{bg};'>"
-            f"<td style='padding:9px 14px;border-bottom:1px solid #eee;text-align:center;color:#888;'>{rank}</td>"
-            f"<td style='padding:9px 14px;border-bottom:1px solid #eee;font-weight:700;'>{ticker}</td>"
-            f"<td style='padding:9px 14px;border-bottom:1px solid #eee;'>{name}</td>"
-            f"<td style='padding:9px 14px;border-bottom:1px solid #eee;text-align:right;font-variant-numeric:tabular-nums;'>{ps:.2f}x</td>"
+            f"<tr>"
+            f"<td style='padding:14px 16px;{border}color:#999;font-size:13px;text-align:center;'>{rank}</td>"
+            f"<td style='padding:14px 16px;{border}font-weight:700;font-size:14px;letter-spacing:-0.01em;'>{ticker}</td>"
+            f"<td style='padding:14px 16px;{border}font-size:14px;color:#333;'>{name}</td>"
+            f"<td style='padding:14px 16px;{border}text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;color:#00a86b;'>{ps:.2f}x</td>"
             f"</tr>"
         )
-    return f"""<html><body style="font-family:Arial,sans-serif;color:#222;max-width:660px;margin:32px auto;">
-<h2 style="color:#1a73e8;margin-bottom:4px;">SaaS Stocks with P/S Between 2.0x and 4.0x &mdash; {today}</h2>
-<p style="color:#666;font-size:13px;margin-top:0;">
-  Universe: Vanguard Information Technology ETF (VGT)<br>
-  Sorted ascending by trailing-twelve-month Price / Sales ratio.
-</p>
-<table style="border-collapse:collapse;width:100%;font-size:14px;">
-  <thead>
-    <tr style="background:#e8eeff;">
-      <th style="padding:9px 14px;text-align:center;color:#555;">#</th>
-      <th style="padding:9px 14px;text-align:left;color:#555;">Ticker</th>
-      <th style="padding:9px 14px;text-align:left;color:#555;">Company</th>
-      <th style="padding:9px 14px;text-align:right;color:#555;">P/S (TTM)</th>
-    </tr>
-  </thead>
-  <tbody>
-    {row_html}
-  </tbody>
-</table>
-<p style="color:#bbb;font-size:11px;margin-top:18px;">
-  Data via Yahoo Finance &middot; Holdings via Vanguard
-</p>
-</body></html>"""
+    count = len(rows)
+    return f"""<html>
+<body style="margin:0;padding:0;background:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <div style="max-width:620px;margin:0 auto;padding:32px 16px 48px;">
+
+    <!-- Header -->
+    <div style="background:#000;border-radius:16px;padding:36px 32px 32px;margin-bottom:24px;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#00a86b;margin-bottom:12px;">VGT &middot; SaaS Filter</div>
+      <h1 style="margin:0 0 8px;font-size:28px;font-weight:800;color:#fff;line-height:1.15;letter-spacing:-0.03em;">
+        SaaS P/S Screener 📊
+      </h1>
+      <p style="margin:0;font-size:15px;color:#aaa;line-height:1.5;">
+        {count} software companies from VGT with a P/S ratio between 2.0x and 4.0x &mdash; {today}
+      </p>
+    </div>
+
+    <!-- Table card -->
+    <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ebebeb;">
+      <div style="padding:20px 16px 12px;border-bottom:1px solid #ebebeb;">
+        <span style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#999;">Sorted by P/S ratio &uarr;</span>
+      </div>
+      <table style="border-collapse:collapse;width:100%;">
+        <thead>
+          <tr style="background:#fafafa;">
+            <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#bbb;">#</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#bbb;">Ticker</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#bbb;">Company</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#bbb;">P/S (TTM)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {row_html}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <p style="margin:24px 0 0;text-align:center;font-size:12px;color:#bbb;line-height:1.6;">
+      Data via Yahoo Finance &middot; Holdings via Vanguard (VGT)<br>
+      Industry filter: Software &mdash; Application &amp; Infrastructure
+    </p>
+
+  </div>
+</body>
+</html>"""
 
 
 def send_email(html: str) -> None:
